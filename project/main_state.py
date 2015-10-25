@@ -1,20 +1,25 @@
 __author__ = '김진근'
 
-# 1. 해야할것 몬스터들이 여러마리 생성되도록
-# 2.
-# 3. 인트로, 메인화면 넘어가기
-# 4. 몬스터가 겹치지 않도록
-# 5.
-
 import random
 import json
 import os
+import sys
+sys.path.append('../LabsAll/Labs')
 
 from pico2d import *
 
-running = None
+import game_framework
+import title_state
 
-######################################################################
+name = "MainState"
+
+player = None
+background = None
+enemy_s = None
+enemy_g = None
+boss = None
+
+
 class Background:
 
     def __init__(self):
@@ -22,17 +27,13 @@ class Background:
         self.y = 0
 
     def draw(self):
-        # self.image.clip_draw(0, self.y, 1280, 960-self.y, 640, int((960 - self.y)/2))
-        # self.image.clip_draw(0, 0, 1280, self.y, 640, 960 - int(960 - (960 - self.y))/2)
 
         self.image.clip_draw(0, self.y, 800, 600-self.y, 400, int((600 - self.y)/2))
         self.image.clip_draw(0, 0, 800, self.y, 400, 600 - int(600 - (600 - self.y))/2)
 
-
     def update(self):
-        self.y += 5
+        self.y += 1
 
-        # if(self.y >= 960):
         if(self.y >= 600):
             self.y = 0
 
@@ -48,34 +49,6 @@ class Player:
     def draw(self):
         self.image.clip_draw(self.frame * 64, 0, 64, 80, self.x, self.y)
 
-
-    # def handle_event(self, event):
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
-    #         self.x += 5
-    #         self.frame += 1
-    #         if self.frame >= 6:
-    #             self.frame = 6
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
-    #         self.x -= 5
-    #         self.frame -= 1
-    #         if self.frame <= 0:
-    #             self.frame = 0
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
-    #         self.y += 5
-    #         self.frame += 1
-    #         if self.y >= 960:
-    #             self.y = 960
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
-    #         self.y -= 5
-    #         self.frame -= 1
-    #         if self.y <= 0:
-    #             self.y = 0
-
-
 #######################################################################
 
 class Enemy_s:
@@ -84,14 +57,14 @@ class Enemy_s:
 
     def __init__(self):
         # self.x, self.y = random.randint(50, 1200), 900
-        self.x, self.y = random.randint(50, 750), 600
+        self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
 
         if self.image == None:
             self.image = load_image('Scourge.png')
 
     def update(self):
-        self.y -= 50
+        self.y -= 3
 
     def draw(self):
         self.image.clip_draw( self.frame * 34, 280, 34, 30 , self.x, self.y )
@@ -111,17 +84,17 @@ class Enemy_g:
             self.image = load_image('Guardian.png')
 
     def update(self):
-        self.y -= 3
-        self.randint = random.randint(1,6)
-        if (self.randint % 2 == 0):
-            self.x += 10
-            if ( self.x >= 750 ):
-                self.x = 750
-
-        else:
-            self.x -= 10
-            if ( self.x <= 50 ):
-                self.x = 50
+        self.y -= 1
+        # self.randint = random.randint(1,6)
+        # if (self.randint % 2 == 0):
+        #     self.x += 10
+        #     if ( self.x >= 750 ):
+        #         self.x = 750
+        #
+        # else:
+        #     self.x -= 10
+        #     if ( self.x <= 50 ):
+        #         self.x = 50
 
     def draw(self):
         self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
@@ -157,9 +130,11 @@ def handle_events():
 
         if event.type == SDL_QUIT:
             running = False
+            game_framework.quit()
 
         if event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
+            game_framework.change_state(title_state)
 
         if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
             player.x += 50
@@ -191,20 +166,9 @@ def handle_events():
 
 #############################################################################
 
-player = None
-background = None
-enemy_s = None
-enemy_g = None
-boss = None
+def enter():
 
-running = True
-
-###############################################
-def main():
-
-    open_canvas(800, 600)
-
-    global background, player, running, enemy_s,enemy_g, boss
+    global background, player, enemy_s, enemy_g, boss
 
     background = Background()
     player = Player()
@@ -212,16 +176,41 @@ def main():
     enemy_g = Enemy_g()
     boss = Boss()
 
-    running = True;
+######################################################################
+def exit():
+    global background, player, enemy_s, enemy_g, boss
+    del(background)
+    del(player)
+    del(boss)
+    del(enemy_s)
+    del(enemy_g)
 
-    while running :
-        handle_events()
+    close_canvas()
+
+######################################################################
+
+def pause():
+    pass
+
+
+def resume():
+    pass
+
+#########################################################################
+
+def update():
 
         background.update()
         enemy_s.update()
         enemy_g.update()
         boss.update()
 
+
+#############################################################################
+
+def draw():
+
+        handle_events()
         clear_canvas()
 
         background.draw()
@@ -232,87 +221,19 @@ def main():
 
         update_canvas()
 
-        delay(0.05)
+#############################################################################
 
-    close_canvas()
+def main():
 
+    enter()
+    while running:
 
-
-
-######################################################################
-
-# player = None
-# background = None
-# enemy_s = None
-# enemy_g = None
-# boss = None
-#
-# running = True
-#
-#
-# def enter():
-#
-#     global background, player, enemy_s, enemy_g, boss
-#
-#     background = Background()
-#     player = Player()
-#     enemy_s = Enemy_s()
-#     enemy_g = Enemy_g()
-#     boss = Boss()
-#
-# ######################################################################
-# def exit():
-#     global background, player, enemy_s, enemy_g, boss
-#     del(background)
-#     del(player)
-#     del(boss)
-#     del(enemy_s)
-#     del(enemy_g)
-#
-#     close_canvas()
-#
-# ######################################################################
-#
-# def update():
-#
-#         background.update()
-#         enemy_s.update()
-#         enemy_g.update()
-#         boss.update()
-#
-#
-# #############################################################################
-#
-# def draw():
-#
-#         handle_events()
-#         clear_canvas()
-#
-#         background.draw()
-#         player.draw()
-#         enemy_s.draw()
-#         enemy_g.draw()
-#         boss.draw()
-#
-#         update_canvas()
-# #
-# # #############################################################################
-# #
-# def main():
-#
-#     enter()
-#     while running:
-#
-#         handle_events()
-#         update()
-#         draw()
-#     exit()
+        handle_events()
+        update()
+        draw()
+    exit()
 
 ####################################################################
 
 if __name__ == '__main__':
     main()
-
-
-
-
