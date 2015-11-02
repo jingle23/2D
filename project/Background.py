@@ -7,8 +7,7 @@ __author__ = '김진근'
 # 5.
 
 import random
-import json
-import os
+
 
 from pico2d import *
 
@@ -22,8 +21,6 @@ class Background:
         self.y = 0
 
     def draw(self):
-        # self.image.clip_draw(0, self.y, 1280, 960-self.y, 640, int((960 - self.y)/2))
-        # self.image.clip_draw(0, 0, 1280, self.y, 640, 960 - int(960 - (960 - self.y))/2)
 
         self.image.clip_draw(0, self.y, 800, 600-self.y, 400, int((600 - self.y)/2))
         self.image.clip_draw(0, 0, 800, self.y, 400, 600 - int(600 - (600 - self.y))/2)
@@ -32,51 +29,98 @@ class Background:
     def update(self):
         self.y += 5
 
-        # if(self.y >= 960):
         if(self.y >= 600):
             self.y = 0
 
 ######################################################################
 class Player:
 
+    image = None
+
+    STOP, START = 0, 1
+
     def __init__(self):
         self.image = load_image('Player.png')
-        # self.x, self.y = 640, 300
         self.x, self.y = 400, 100
         self.frame = 3
+        self.RIGHT, self.LEFT, self.UP, self.DOWN = self.STOP
+
+
+    def handle_event(self, event):
+
+        ## 미사일발사
+        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
+            pass
+
+        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
+            self.RIGHT = self.START
+
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
+            self.LEFT = self.START
+
+        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
+            self.UP = self.START
+
+
+        elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
+            self.DOWN = self.START
+
+
+    def update(self):
+        self.frame = (self.frame + 1) % 6
+
+        if self.RIGHT == self.START:
+            self.x = min( 800, self.x + 50 )
+
+            # player.x += 50
+            # # player.frame += 1
+            #
+            # if player.x >= 800:
+            #     player.x = 800
+            #
+            # # if player.frame >= 6:
+            # #     player.frame = 6
+
+
+        if self.LEFT == self.START:
+            self.x = max(0, self.x - 50)
+
+            # player.x -= 50
+            # # player.frame -= 1
+            #
+            # if player.x <= 20:
+            #     player.x = 20
+
+            # if player.frame <= 0:
+            #     player.frame = 0
+
+        if self.UP == self.START:
+            self.y = min(550, self.y + 30)
+
+            # player.y += 30
+            # if player.y >= 550:
+            #     player.y = 550
+
+        if self.DOWN == self.START:
+            self.y = max(0, self.y - 30)
+
+            # player.y -= 30
+            # if player.y <= 50:
+            #     player.y = 50
+
 
     def draw(self):
         self.image.clip_draw(self.frame * 64, 0, 64, 80, self.x, self.y)
 
 
-    # def handle_event(self, event):
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
-    #         self.x += 5
-    #         self.frame += 1
-    #         if self.frame >= 6:
-    #             self.frame = 6
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
-    #         self.x -= 5
-    #         self.frame -= 1
-    #         if self.frame <= 0:
-    #             self.frame = 0
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
-    #         self.y += 5
-    #         self.frame += 1
-    #         if self.y >= 960:
-    #             self.y = 960
-    #
-    #     if(event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
-    #         self.y -= 5
-    #         self.frame -= 1
-    #         if self.y <= 0:
-    #             self.y = 0
 
 
 #######################################################################
+
+
+
+
+
 
 class Enemy_s:
 
@@ -161,33 +205,10 @@ def handle_events():
         if event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             running = False
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
-            player.x += 50
-            if player.x >= 800:
-                player.x = 800
+        else:
+            player.handle_event(event)
 
-            player.frame += 1
-            if player.frame >= 6:
-                player.frame = 6
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
-            player.x -= 50
-            if player.x <= 20:
-                player.x = 20
-
-            player.frame -= 1
-            if player.frame <= 0:
-                player.frame = 0
-
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
-            player.y += 30
-            if player.y >= 550:
-                player.y = 550
-
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
-            player.y -= 30
-            if player.y <= 50:
-                player.y = 50
 
 #############################################################################
 
@@ -217,6 +238,7 @@ def main():
     while running :
         handle_events()
 
+        player.update()
         background.update()
         enemy_s.update()
         enemy_g.update()

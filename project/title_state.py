@@ -29,11 +29,9 @@ def handle_events():
             game_framework.quit()
 
         else:
-            #if ( ( event.type == SDL_KEYDOWN ) and (event.key == SDLK_ESCAPE) ):
             if (event.type, event.key) == (SDL_KEYDOWN, SDLK_ESCAPE):
                 game_framework.quit()
 
-            #elif ( ( event.type == SDL_KEYDOWN ) and ( event.key == SDLK_SPACE ) ):
             elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
                 game_framework.change_state(main_state)
 
