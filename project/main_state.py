@@ -25,7 +25,7 @@ boss = None
 class Background:
 
     def __init__(self):
-        self.image = load_image('background.png')
+        self.image = load_image('Background/background.png')
         self.y = 0
 
     def draw(self):
@@ -44,49 +44,79 @@ class Player:
 
     image = None
 
+    STAND, RIGHT_RUN, LEFT_RUN, UP_RUN, DOWN_RUN = 0, 1, 2, 3, 4
+
+
     def __init__(self):
+
         if Player.image == None:
-            self.image = load_image('Player.png')
+            self.image = load_image('Char/Player.png')
         self.x, self.y = 400, 100
         self.frame = 3
-        self.RIGHT, self.LEFT, self.UP, self.DOWN = False, False, False, False
+        # self.RIGHT, self.LEFT, self.UP, self.DOWN = False, False, False, False
+        self.state = self.STAND
 
 
+## 캐릭터 상하좌우 컨트롤
     def handle_event(self, event):
 
+        ## 미사일 발사
         if(event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
             player.missile_shoot()
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
-            self.UP = True
-            self.DOWN = False
+        ## 좌우 키 눌렀을 때
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
+            if self.state in ( self.STAND, self.LEFT_RUN, self.UP_RUN, self.DOWN_RUN ):
+                self.state = self.RIGHT_RUN
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
-            self.DOWN = True
-            self.UP = False
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
+            if self.state in ( self.STAND, self.RIGHT_RUN, self.UP_RUN, self.DOWN_RUN ):
+                self.state = self.LEFT_RUN
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_LEFT):
-            self.LEFT = True
-            self.RIGHT = False
+        ## 좌우 키 뗐을 때
+        elif (event.type, event.key) == (SDL_KEYUP, SDLK_RIGHT):
+            if self.state in ( self.RIGHT_RUN,):
+                self.state = self.STAND
 
-        if(event.type, event.key) == (SDL_KEYDOWN, SDLK_RIGHT):
-            self.RIGHT = True
-            self.LEFT = False
+        elif (event.type, event.key) == (SDL_KEYUP, SDLK_LEFT):
+            if self.state in ( self.LEFT_RUN, ):
+                self.state = self.STAND
+
+        ## 상하 키 눌렀을 때
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_UP):
+            if self.state in (self.STAND, self.DOWN_RUN, self.RIGHT_RUN, self.LEFT_RUN):
+                self.state = self.UP_RUN
+
+        elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_DOWN):
+            if self.state in (self.STAND, self.UP_RUN, self.RIGHT_RUN, self.LEFT_RUN):
+                self.state = self.DOWN_RUN
+
+        ## 상하 키 뗐을 때
+        elif (event.type, event.key) == (SDL_KEYUP, SDLK_UP):
+            if self.state in (self.UP_RUN,):
+                self.state = self.STAND
+
+        elif (event.type, event.key) == (SDL_KEYUP, SDLK_DOWN):
+            if self.state in (self.DOWN_RUN,):
+                self.state = self.STAND
 
 
     def update(self):
 
-        if self.RIGHT == True:
+        if self.state == self.STAND:
+            player.frame = 3
+
+        if self.state == self.RIGHT_RUN:
             player.x += 5
-            if player.x >= 800:
-                player.x = 800
+            if player.x >= 780:
+                player.x = 780
 
             player.frame += 1
             if player.frame >= 6:
                 player.frame = 6
 
 
-        if self.LEFT == True:
+        if self.state == self.LEFT_RUN:
             player.x -= 5
             if player.x <= 20:
                 player.x = 20
@@ -95,15 +125,20 @@ class Player:
             if player.frame <= 0:
                 player.frame = 0
 
-        if self.UP == True:
+
+        if self.state == self.UP_RUN:
             player.y += 3
             if player.y >= 550:
                 player.y = 550
 
-        if self.DOWN == True:
+
+        if self.state == self.DOWN_RUN:
             player.y -= 3
             if player.y <= 50:
                 player.y = 50
+
+
+
 
 
     def draw(self):
@@ -120,7 +155,7 @@ class Player:
 class Missile:
     def __init__(self, x, y) :
         self.x, self.y = x, y
-        self.image = load_image('missile_1.png')
+        self.image = load_image('Char/missile_1.png')
 
     def update(self) :
         self.y += 10
@@ -147,7 +182,7 @@ class Enemy_s:
         self.crash = False
 
         if self.image == None:
-            self.image = load_image('Scourge.png')
+            self.image = load_image('Char/Scourge.png')
 
     def update(self):
         self.y -= 5
@@ -171,7 +206,7 @@ class Enemy_g:
         self.frame = 8
 
         if self.image == None:
-            self.image = load_image('Guardian.png')
+            self.image = load_image('Char/Guardian.png')
 
     def update(self):
         self.y -= 0.5
@@ -197,7 +232,7 @@ class Boss:
         self.frame = 8
 
         if Boss.image == None:
-            self.image = load_image('Devourer.png')
+            self.image = load_image('Char/Devourer.png')
 
     def update(self):
         self.y -= 0.1

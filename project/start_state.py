@@ -16,7 +16,7 @@ logo_time = 0.0
 def enter():
     global image
     open_canvas()
-    image = load_image('intro.png')
+    image = load_image('Background/intro.png')
 
 
 def exit():
