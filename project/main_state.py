@@ -1,5 +1,11 @@
 __author__ = '김진근'
 
+## 해야할것
+# 1. 속도를 프레임 타임으로 바꿔줌
+# 2. 스커지와 스커지를 충돌체크한 다음 같은 위치에서 생성되지 않게 만든다
+# 3. 스커지와 플레이어를 충돌체크한다.
+
+
 import random
 import json
 import os
@@ -42,22 +48,28 @@ class Background:
 ######################################################################
 class Player:
 
-    image = None
+    PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
+    RUN_SPEED_KMPH = 20.0                    # Km / Hour
+    RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
+    RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
+    RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 8
+
+    image = None
     STAND, RIGHT_RUN, LEFT_RUN, UP_RUN, DOWN_RUN = 0, 1, 2, 3, 4
 
-
     def __init__(self):
+        self.x, self.y = 400, 100
+        self.frame = 3
+        self.state = self.STAND
 
         if Player.image == None:
             self.image = load_image('Char/Player.png')
-        self.x, self.y = 400, 100
-        self.frame = 3
-        # self.RIGHT, self.LEFT, self.UP, self.DOWN = False, False, False, False
-        self.state = self.STAND
 
 
-## 캐릭터 상하좌우 컨트롤
     def handle_event(self, event):
 
         ## 미사일 발사
@@ -138,7 +150,11 @@ class Player:
                 player.y = 50
 
 
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
 
+    def get_bb(self):
+        return self.x - 40, self.y - 40, self.x + 30 , self.y + 40
 
 
     def draw(self):
@@ -147,8 +163,6 @@ class Player:
     def missile_shoot(self):
         newmissile = Missile(self.x, self.y)
         Missile_List.append(newmissile)
-
-
 
 #########################################################################
 
@@ -166,8 +180,11 @@ class Missile:
     def draw(self) :
         self.image.draw(self.x, self.y)
 
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
 
-
+    def get_bb(self):
+        return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
 
 #########################################################################
 
@@ -176,7 +193,6 @@ class Enemy_s:
     image = None
 
     def __init__(self):
-        # self.x, self.y = random.randint(50, 1200), 900
         self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
         self.crash = False
@@ -190,9 +206,14 @@ class Enemy_s:
         if self.y < 0:
             self.x , self.y = random.randint(50, 750), 650
 
-
     def draw(self):
         self.image.clip_draw( self.frame * 34, 280, 34, 30 , self.x, self.y )
+
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
+
+    def get_bb(self):
+        return self.x - 20, self.y - 20, self.x + 20 , self.y + 20
 
 ########################################################################
 
@@ -216,9 +237,13 @@ class Enemy_g:
 
 
     def draw(self):
-
         self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
 
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
+
+    def get_bb(self):
+        return self.x - 40, self.y - 30, self.x + 35 , self.y + 30
 
 #######################################################################
 
@@ -240,6 +265,12 @@ class Boss:
     def draw(self):
         self.image.clip_draw( self.frame * 72, 1850, 72, 85 , self.x, self.y )
 
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
+
+    def get_bb(self):
+        return self.x - 25, self.y - 45, self.x + 40 , self.y + 45
+
 ########################################################################
 
 def handle_events():
@@ -260,11 +291,37 @@ def handle_events():
         else:
             player.handle_event(event)
 
+#############################################################################
+def collide(a, b):
+    left_a, bottom_a, right_a, top_a = a.get_bb()
+    left_b, bottom_b, right_b, top_b = b.get_bb()
 
+    if left_a > right_b : return False
+    if right_a < left_b : return False
+    if top_a < bottom_b : return False
+    if bottom_a > top_b : return False
 
+    return True
 
 #############################################################################
+class Explosion:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.frame = 0
+        self.image = load_image('Char/Explosion.png' )
 
+    def update(self):
+        self.frame = (self.frame + 1) % 16
+
+        if(self.frame == 15):
+            return True
+        else:
+            return False
+
+    def draw(self):
+        self.image.clip_draw(int(self.frame %4)*120, 360-int(self.frame//4)*120, 120, 120, self.x, self.y)
+
+#############################################################################
 def enter():
 
     global background, player, enemy_s_team, enemy_g_team, boss
@@ -275,7 +332,6 @@ def enter():
     enemy_g_team = [Enemy_g() for i in range(2) ]
     boss = Boss()
     Missile_List = []
-
 
 ######################################################################
 def exit():
@@ -335,6 +391,20 @@ def draw():
             missile.draw()
 
         boss.draw()
+
+        player.draw_bb()
+        boss.draw_bb()
+
+
+        for enemy_s in enemy_s_team:
+            enemy_s.draw_bb()
+
+        for enemy_g in enemy_g_team:
+            enemy_g.draw_bb()
+
+        for missile in Missile_List:
+            missile.draw_bb()
+
 
         update_canvas()
 
