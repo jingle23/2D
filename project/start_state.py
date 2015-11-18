@@ -37,7 +37,7 @@ def update(frame_time):
     pass
 
 
-def draw(frame_time):
+def draw():
     global image
     clear_canvas()
     image.draw(400, 300)
@@ -46,18 +46,14 @@ def draw(frame_time):
     pass
 
 
-def handle_events(frame_time):
+def handle_events():
     events = get_events()
     pass
 
 
 ######################################################################
-
 def pause():
     pass
-
-
 def resume():
     pass
-
 #########################################################################
