@@ -30,24 +30,17 @@ boss = None
 
 class Background:
 
-    PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
-    RUN_SPEED_KMPH = 20.0                    # Km / Hour
-    RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
-    RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
-    RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
-
-
     def __init__(self):
         self.image = load_image('Background/background.png')
         self.y = 0
 
-    def draw(self, frame_time):
+    def draw(self):
 
         self.image.clip_draw(0, self.y, 800, 600-self.y, 400, int((600 - self.y)/2))
         self.image.clip_draw(0, 0, 800, self.y, 400, 600 - int(600 - (600 - self.y))/2)
 
-    def update(self, frame_time):
-        self.y += frame_time * self.RUN_SPEED_PPS
+    def update(self):
+        self.y += 1
 
         if(self.y >= 600):
             self.y = 0
@@ -71,10 +64,12 @@ class Player:
     def __init__(self):
         self.x, self.y = 400, 100
         self.frame = 3
+        # self.RIGHT, self.LEFT, self.UP, self.DOWN = False, False, False, False
         self.state = self.STAND
 
         if Player.image == None:
             self.image = load_image('Char/Player.png')
+
 
 
     def handle_event(self, event):
@@ -120,14 +115,13 @@ class Player:
                 self.state = self.STAND
 
 
-    def update(self, frame_time):
-        distance = frame_time * self.RUN_SPEED_PPS
+    def update(self):
 
         if self.state == self.STAND:
             player.frame = 3
 
         if self.state == self.RIGHT_RUN:
-            player.x += distance
+            player.x += 5
             if player.x >= 780:
                 player.x = 780
 
@@ -137,7 +131,7 @@ class Player:
 
 
         if self.state == self.LEFT_RUN:
-            player.x -= distance
+            player.x -= 5
             if player.x <= 20:
                 player.x = 20
 
@@ -147,16 +141,15 @@ class Player:
 
 
         if self.state == self.UP_RUN:
-            player.y += distance
+            player.y += 3
             if player.y >= 550:
                 player.y = 550
 
 
         if self.state == self.DOWN_RUN:
-            player.y -= distance
+            player.y -= 3
             if player.y <= 50:
                 player.y = 50
-
 
     def draw_bb(self):
         draw_rectangle( *self.get_bb() )
@@ -172,28 +165,17 @@ class Player:
         newmissile = Missile(self.x, self.y)
         Missile_List.append(newmissile)
 
+
+
 #########################################################################
 
 class Missile:
-    PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
-    RUN_SPEED_KMPH = 20.0                    # Km / Hour
-    RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
-    RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
-    RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
-
-    TIME_PER_ACTION = 0.5
-    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-    FRAMES_PER_ACTION = 8
-
-
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.image = load_image('Char/missile_1.png')
 
-    def update(self, frame_time) :
-        distance = frame_time * self.RUN_SPEED_PPS
-
-        self.y += distance
+    def update(self) :
+        self.y += 10
         if(self.y > 600) :
             self.y = 0
             del Missile_List[0]
@@ -207,22 +189,18 @@ class Missile:
     def get_bb(self):
         return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
 
+
+
+
+
 #########################################################################
 
 class Enemy_s:
-    PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
-    RUN_SPEED_KMPH = 20.0                    # Km / Hour
-    RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
-    RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
-    RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
-
-    TIME_PER_ACTION = 0.5
-    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-    FRAMES_PER_ACTION = 8
 
     image = None
 
     def __init__(self):
+        # self.x, self.y = random.randint(50, 1200), 900
         self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
         self.crash = False
@@ -230,13 +208,12 @@ class Enemy_s:
         if self.image == None:
             self.image = load_image('Char/Scourge.png')
 
-    def update(self, frame_time):
-        distance = frame_time * self.RUN_SPEED_PPS
-
-        self.y -= distance
+    def update(self):
+        self.y -= 5
 
         if self.y < 0:
             self.x , self.y = random.randint(50, 750), 650
+
 
     def draw(self):
         self.image.clip_draw( self.frame * 34, 280, 34, 30 , self.x, self.y )
@@ -247,19 +224,10 @@ class Enemy_s:
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20 , self.y + 20
 
+
 ########################################################################
 
 class Enemy_g:
-
-    PIXEL_PER_METER = (10.0 / 0.3)           # 10 pixel 30 cm
-    RUN_SPEED_KMPH = 20.0                    # Km / Hour
-    RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
-    RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
-    RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
-
-    TIME_PER_ACTION = 0.5
-    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-    FRAMES_PER_ACTION = 8
 
     image = None
 
@@ -271,15 +239,15 @@ class Enemy_g:
         if self.image == None:
             self.image = load_image('Char/Guardian.png')
 
-    def update(self, frame_time):
-        distance = frame_time * self.RUN_SPEED_PPS
-        self.y -= distance
+    def update(self):
+        self.y -= 0.5
 
         if self.y < 0:
             self.x , self.y = random.randint(50, 750), 650
 
 
     def draw(self):
+
         self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
 
     def draw_bb(self):
@@ -287,6 +255,8 @@ class Enemy_g:
 
     def get_bb(self):
         return self.x - 40, self.y - 30, self.x + 35 , self.y + 30
+
+
 
 #######################################################################
 
@@ -314,9 +284,10 @@ class Boss:
     def get_bb(self):
         return self.x - 25, self.y - 45, self.x + 40 , self.y + 45
 
+
 ########################################################################
 
-def handle_events(self, frame_time):
+def handle_events():
 
     global running, player
     events = get_events()
@@ -333,6 +304,9 @@ def handle_events(self, frame_time):
 
         else:
             player.handle_event(event)
+
+
+
 
 #############################################################################
 def collide(a, b):
@@ -367,7 +341,7 @@ class Explosion:
 #############################################################################
 def enter():
 
-    global background, player, enemy_s_team, enemy_g_team, boss
+    global background, player, enemy_s_team, enemy_g_team, boss, explosion
 
     background = Background()
     player = Player()
@@ -376,9 +350,10 @@ def enter():
     boss = Boss()
     Missile_List = []
 
+
+
 ######################################################################
 def exit():
-    global background, player, enemy_s_team, enemy_g_team, boss
     del(background)
     del(player)
     del(boss)
@@ -398,25 +373,39 @@ def resume():
 
 #########################################################################
 
-def update(frame_time):
+def update():
 
-        background.update(frame_time)
-        player.update(frame_time)
+        background.update()
+        player.update()
 
         for enemy_s in enemy_s_team:
-            enemy_s.update(frame_time)
+            enemy_s.update()
 
         for enemy_g in enemy_g_team:
-            enemy_g.update(frame_time)
+            enemy_g.update()
 
         boss.update()
 
         for missile in Missile_List:
-            missile.update(frame_time)
+            missile.update()
+
+
+        for player_missile in Missile_List:
+            for enemy_s in enemy_s_team:
+                if collide( player_missile, enemy_s ):  # 충돌체크가 Ture이면
+                    Missile_List.remove( player_missile )
+                    enemy_s_team.remove( enemy_s )
+
+        for player_missile in Missile_List:
+            for enemy_g in enemy_g_team:
+                if collide( player_missile, enemy_g ):
+                    Missile_List.remove( player_missile )
+                    enemy_g_team.remove( enemy_g )
+
 
 #############################################################################
 
-def draw(frame_time):
+def draw():
 
         handle_events()
         clear_canvas()
@@ -449,18 +438,20 @@ def draw(frame_time):
             missile.draw_bb()
 
 
+
+
         update_canvas()
 
-############################################################################
+#############################################################################
 
-def main(frame_time):
+def main():
 
     enter()
     while running:
 
-        handle_events(frame_time)
-        update(frame_time)
-        draw(frame_time)
+        handle_events()
+        update()
+        draw()
     exit()
 
 ####################################################################

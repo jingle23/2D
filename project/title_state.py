@@ -20,7 +20,7 @@ def exit():
     del(image)
 
 
-def handle_events(frame_time):
+def handle_events():
     events = get_events()
 
     for event in events:
@@ -36,17 +36,15 @@ def handle_events(frame_time):
                 game_framework.change_state(main_state)
 
 
-def draw(frame_time):
+def draw():
     clear_canvas()
     image.draw(400, 300)
     update_canvas()
 
-    pass
 
 
 
-
-def update(frame_time):
+def update():
     pass
 
 
