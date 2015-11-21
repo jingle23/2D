@@ -34,6 +34,7 @@ class Background:
         self.image = load_image('Background/background.png')
         self.y = 0
 
+## 스크롤 추가
     def draw(self):
 
         self.image.clip_draw(0, self.y, 800, 600-self.y, 400, int((600 - self.y)/2))
@@ -189,10 +190,6 @@ class Missile:
     def get_bb(self):
         return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
 
-
-
-
-
 #########################################################################
 
 class Enemy_s:
@@ -203,7 +200,10 @@ class Enemy_s:
         # self.x, self.y = random.randint(50, 1200), 900
         self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
+        self.hp = 10
         self.crash = False
+
+        self.death_Scnt = 0
 
         if self.image == None:
             self.image = load_image('Char/Scourge.png')
@@ -213,7 +213,6 @@ class Enemy_s:
 
         if self.y < 0:
             self.x , self.y = random.randint(50, 750), 650
-
 
     def draw(self):
         self.image.clip_draw( self.frame * 34, 280, 34, 30 , self.x, self.y )
@@ -232,9 +231,9 @@ class Enemy_g:
     image = None
 
     def __init__(self):
-        # self.x, self.y = random.randint(50, 1200), 900
         self.x, self.y = random.randint(50, 750), 600
         self.frame = 8
+        self.hp = 20
 
         if self.image == None:
             self.image = load_image('Char/Guardian.png')
@@ -247,7 +246,6 @@ class Enemy_g:
 
 
     def draw(self):
-
         self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
 
     def draw_bb(self):
@@ -322,13 +320,14 @@ def collide(a, b):
 
 #############################################################################
 class Explosion:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
+    # def __init__(self, x, y):
+    #     self.x, self.y = x, y
+    def __init__(self):
         self.frame = 0
         self.image = load_image('Char/Explosion.png' )
 
     def update(self):
-        self.frame = (self.frame + 1) % 16
+        self.frame = (self.frame + 1)  % 16
 
         if(self.frame == 15):
             return True
@@ -341,15 +340,18 @@ class Explosion:
 #############################################################################
 def enter():
 
-    global background, player, enemy_s_team, enemy_g_team, boss, explosion
+    global background, player, enemy_s_team, enemy_g_team, boss, explosion, enemy_s
 
     background = Background()
     player = Player()
-    enemy_s_team = [Enemy_s() for i in range(5) ]
+    # enemy_s_team = [Enemy_s() for i in range(5) ]
     enemy_g_team = [Enemy_g() for i in range(2) ]
-    boss = Boss()
-    Missile_List = []
+    enemy_s = Enemy_s()
 
+    boss = Boss()
+    explosion = Explosion()
+
+    Missile_List = []
 
 
 ######################################################################
@@ -378,8 +380,10 @@ def update():
         background.update()
         player.update()
 
-        for enemy_s in enemy_s_team:
-            enemy_s.update()
+        # for enemy_s in enemy_s_team:
+        #     enemy_s.update()
+
+        enemy_s.update()
 
         for enemy_g in enemy_g_team:
             enemy_g.update()
@@ -394,13 +398,23 @@ def update():
             for enemy_s in enemy_s_team:
                 if collide( player_missile, enemy_s ):  # 충돌체크가 Ture이면
                     Missile_List.remove( player_missile )
-                    enemy_s_team.remove( enemy_s )
+
+                    enemy_s.hp -= 10
+                    if enemy_s.hp <= 0:
+                        # 스커지 죽는 draw함수 불러옴
+                        enemy_s_team.remove( enemy_s )
+
 
         for player_missile in Missile_List:
             for enemy_g in enemy_g_team:
                 if collide( player_missile, enemy_g ):
                     Missile_List.remove( player_missile )
-                    enemy_g_team.remove( enemy_g )
+                    # 미사일 폭발 이미지 삽입
+
+                    enemy_g.hp -= 10
+                    if enemy_g.hp <= 0:
+                        # 가디언 죽는 draw함수 불러옴
+                        enemy_g_team.remove( enemy_g )
 
 
 #############################################################################
@@ -436,9 +450,6 @@ def draw():
 
         for missile in Missile_List:
             missile.draw_bb()
-
-
-
 
         update_canvas()
 
