@@ -1,4 +1,3 @@
-__author__ = '김진근'
 import game_framework
 import main_state
 
@@ -6,7 +5,6 @@ from pico2d import *
 
 name = "TitleState"
 image = None
-title_time = 0.0
 
 
 def enter():
@@ -15,11 +13,10 @@ def enter():
 
 
 def exit():
-    global  image
-    # del(image)
+    global image
+    del(image)
 
-
-def handle_events(frame_time):
+def handle_events():
     events = get_events()
 
     for event in events:
@@ -35,16 +32,22 @@ def handle_events(frame_time):
                 game_framework.change_state(main_state)
 
 
-def draw(frame_time):
+def draw():
     clear_canvas()
     image.draw(400, 300)
     update_canvas()
 
-def update(frame_time):
+
+
+
+def update():
     pass
+
 
 def pause():
     pass
+
+
 def resume():
     pass
 
