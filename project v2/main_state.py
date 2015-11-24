@@ -13,8 +13,12 @@ enemy_s = None
 enemy_g = None
 boss = None
 
+frame_time = 0
+current_time =0.0
+
 ################################################################################################
 class Timer :
+    global frame_time
     font = None
     def __init__(self) :
         self.font = load_font('Background/HYWULB.TTF', 25)
@@ -25,11 +29,12 @@ class Timer :
         self.bcnt = 0   # 보스 생성 수
 
         self.score = 0  # 점수
-        self.skill = 0  # 사용가능 스킬 횟수
+        self.skill = 100  # 사용가능 스킬 횟수
 #--------------------------------------------------------------------------------------------#
-    def update(self) :
-        self.time += 0.01
-        if self.time >= 0.1:
+    def update(self, frame_time) :
+        self.time += frame_time
+
+        if self.time >= 0.5:
             self.create_enemy_s()
             self.scnt += 1
             self.time = 0
@@ -39,7 +44,7 @@ class Timer :
             self.gcnt += 1
             self.scnt = 0
 
-        if (self.gcnt >= 30) and (self.bcnt == 0) :
+        if (self.gcnt >= 17) and (self.bcnt == 0) :
             self.create_enemy_boss()
             self.bcnt = 1
             self.gcnt = 0
@@ -66,7 +71,6 @@ class Timer :
         enemy_boss_list.append(new_enemy_boss)
 
 ################################################################################################
-
 class Background:
 
     def __init__(self):
@@ -77,12 +81,16 @@ class Background:
         self.image.clip_draw(0, self.y, 800, 600-self.y, 400, int((600 - self.y)/2))
         self.image.clip_draw(0, 0, 800, self.y, 400, 600 - int(600 - (600 - self.y))/2)
 #--------------------------------------------------------------------------------------------#
-    def update(self):
+    def update(self,frame_time):
         self.y += 1
         if(self.y >= 600):
             self.y = 0
 ################################################################################################
 class Player:
+
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
 
     image = None
     STAND, RIGHT_RUN, LEFT_RUN, UP_RUN, DOWN_RUN = 0, 1, 2, 3, 4
@@ -92,7 +100,8 @@ class Player:
         self.frame = 3
         self.state = self.STAND
         self.hp = 100
-        self.speed = 5
+        self.speed = 250
+        self.total_frame = 0
 
         if Player.image == None:
             self.image = load_image('Char/Player.png')
@@ -102,15 +111,17 @@ class Player:
         ## 미사일 발사
         if(event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
             player.missile_shoot()
-        # # 스킬1 사용
-        # elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_x):
-        #     if timer.skill >= 1:
-        #         player.missile_shoot()
-        #         timer.skill -= 1
+
+        # 스킬1 사용
+        elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_x):
+            if timer.skill >= 1:
+                player.skill_shoot()
+                timer.skill -= 1
+
         # 스킬2 사용
         elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_c):
             if timer.skill >= 1:
-                player.speed += 10
+                player.speed += 100
                 timer.skill -= 1
 #--------------------------------------------------------------------------------------------#
         ## 좌우 키 눌렀을 때
@@ -142,13 +153,15 @@ class Player:
             if self.state in (self.DOWN_RUN,):
                 self.state = self.STAND
 #--------------------------------------------------------------------------------------------#
-    def update(self):
+    def update(self, frame_tim):
+        self.total_frame += frame_time
+        self.total_frame += Player.FRAMES_PER_ACTION * Player.ACTION_PER_TIME * frame_time
 
         if self.state == self.STAND:
             player.frame = 3
 
         if self.state == self.RIGHT_RUN:
-            player.x += self.speed
+            player.x += self.speed * frame_time
             if player.x >= 780:
                 player.x = 780
             player.frame += 1
@@ -156,7 +169,7 @@ class Player:
                 player.frame = 6
 
         if self.state == self.LEFT_RUN:
-            player.x -= self.speed
+            player.x -= self.speed * frame_time
             if player.x <= 20:
                 player.x = 20
             player.frame -= 1
@@ -164,12 +177,12 @@ class Player:
                 player.frame = 0
 
         if self.state == self.UP_RUN:
-            player.y += self.speed
+            player.y += self.speed * frame_time
             if player.y >= 550:
                 player.y = 550
 
         if self.state == self.DOWN_RUN:
-            player.y -= self.speed
+            player.y -= self.speed * frame_time
             if player.y <= 50:
                 player.y = 50
 #--------------------------------------------------------------------------------------------#
@@ -186,13 +199,10 @@ class Player:
         newmissile = Missile(self.x, self.y)
         Missile_List.append(newmissile)
 # #--------------------------------------------------------------------------------------------#
-#     def skill_shoot1(self):
-#         newmissile = Missile(self.x, self.y)
-#         Missile_List.append(newmissile)
-# #--------------------------------------------------------------------------------------------#
-#     def skill_shoot2(self):
-#         newmissile = Missile(self.x, self.y)
-#         Missile_List.append(newmissile)
+    def skill_shoot(self):
+        newmissile = Skill(self.x, self.y + 200)
+        skill_list.append(newmissile)
+
 ################################################################################################
 class Missile:
 
@@ -200,12 +210,8 @@ class Missile:
         self.x, self.y = x, y
         self.image = load_image('Char/missile_1.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self) :
-
-        self.y += 10
-        if(self.y > 600) :
-            # self.y = 0
-            del Missile_List[0]
+    def update(self, frame_time) :
+        self.y += 500 * frame_time
 #--------------------------------------------------------------------------------------------#
     def draw(self) :
         self.image.draw(self.x, self.y)
@@ -217,26 +223,6 @@ class Missile:
         return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
 
 ################################################################################################
-# class Skill_1:
-#
-#     def __init__(self, x, y) :
-#         self.x, self.y = x, y + 100
-#         self.frame = 0
-#         self.image = load_image('Char/skill1.jpg')
-# #--------------------------------------------------------------------------------------------#
-#     def update(self) :
-#         self.frame = (self.frame + 1) % 4
-# #--------------------------------------------------------------------------------------------#
-#     def draw(self) :
-#         self.image.clip_draw(self.frame * 110, 125, 110, 110, self.x, self.y)
-# #--------------------------------------------------------------------------------------------#
-#     def draw_bb(self):
-#         draw_rectangle( *self.get_bb() )
-# #--------------------------------------------------------------------------------------------#
-#     def get_bb(self):
-#         return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
-
-################################################################################################
 class Enemy_Missile:
 
     def __init__(self, x, y):
@@ -244,23 +230,103 @@ class Enemy_Missile:
         self.frame = 0
         self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self):
-        self.y -= 10
-        if(self.y <= 0) :
-            del enemy_missile_list[0]
+    def update(self, frame_time):
+        self.y -= 500 * frame_time
 #--------------------------------------------------------------------------------------------#
     def draw(self):
-       self.image.clip_draw( self.frame * 35, 0, 35, 60 , self.x, self.y )
+       # self.image.clip_draw( self.frame * 35, 0, 35, 60 , self.x, self.y, 52, 90 )
+        self.image.clip_draw( 0, 0, 35, 60 , self.x, self.y, 52, 90 )
 #--------------------------------------------------------------------------------------------#
     def draw_bb(self):
         draw_rectangle( *self.get_bb() )
 #--------------------------------------------------------------------------------------------#
     def get_bb(self):
-        return self.x - 20, self.y - 25, self.x + 20 , self.y + 25
+        return self.x - 18, self.y - 22, self.x + 18 , self.y + 22
 
-#########################################################################
+################################################################################################
+class Boss_Left_Missile:
 
+    def __init__(self, x, y):
+        self.x , self.y = x, y
+        self.frame = 0
+        self.image = load_image('Char/Guardian.png')
+#--------------------------------------------------------------------------------------------#
+    def update(self, frame_time):
+        self.x -= self.x / self.y
+        self.y -= 500 * frame_time
+#--------------------------------------------------------------------------------------------#
+    def draw(self):
+       # self.image.clip_draw( self.frame * 35, 0, 35, 60 , self.x, self.y, 52, 90 )
+        self.image.clip_draw( 0, 0, 35, 60 , self.x, self.y, 52, 90 )
+#--------------------------------------------------------------------------------------------#
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
+#--------------------------------------------------------------------------------------------#
+    def get_bb(self):
+        return self.x - 18, self.y - 22, self.x + 18 , self.y + 22
+
+################################################################################################
+class Boss_Right_Missile:
+
+    def __init__(self, x, y):
+        self.x , self.y = x, y
+        self.frame = 0
+        self.image = load_image('Char/Guardian.png')
+#--------------------------------------------------------------------------------------------#
+    def update(self, frame_time):
+        self.x += self.x / self.y
+        self.y -= 500 * frame_time
+#--------------------------------------------------------------------------------------------#
+    def draw(self):
+       # self.image.clip_draw( self.frame * 35, 0, 35, 60 , self.x, self.y, 52, 90 )
+        self.image.clip_draw( 0, 0, 35, 60 , self.x, self.y, 52, 90 )
+#--------------------------------------------------------------------------------------------#
+    def draw_bb(self):
+        draw_rectangle( *self.get_bb() )
+#--------------------------------------------------------------------------------------------#
+    def get_bb(self):
+        return self.x - 18, self.y - 22, self.x + 18 , self.y + 22
+
+
+#################################################################################################
+class Skill :
+
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
+
+    def __init__(self, x, y) :
+        self.x, self.y = x, y
+        self.frame = 0
+        self.total_frame = 0
+        self.image = load_image('Char/skill.png')
+#--------------------------------------------------------------------------------------------#
+    def update(self, frame_time) :
+        self.total_frame += frame_time * Skill.FRAMES_PER_ACTION * Skill.ACTION_PER_TIME
+        self.frame = int(self.total_frame) % 5
+
+        if (self.frame == 4) :
+            del skill_list[0]
+        #     return True
+        # else :
+        #     return False
+
+#--------------------------------------------------------------------------------------------#
+    def draw(self) :
+        self.image.clip_draw(self.frame * 115, 130, 115, 115, self.x, self.y, 300, 300)
+#--------------------------------------------------------------------------------------------#
+    def draw_bb(self):
+        draw_rectangle(*self.get_bb())
+#--------------------------------------------------------------------------------------------#
+    def get_bb(self):
+        return self.x-250, self.y-250, self.x+250, self.y+250
+
+#################################################################################################
 class Enemy_s:
+
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
 
     image = None
 
@@ -268,14 +334,19 @@ class Enemy_s:
         self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
         self.hp = 20
+        self.speed = 600
+        self.total_frame = 0
 
         if self.image == None:
             self.image = load_image('Char/Scourge.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self):
-        self.y -= 10
-        if(self.y < 0):
-            del enemy_s_list[0]
+    def update(self, frame_time):
+        self.total_frame += frame_time
+        self.total_frame += Enemy_s.FRAMES_PER_ACTION * Enemy_s.ACTION_PER_TIME * frame_time
+
+        self.y -= self.speed * frame_time
+        # if(self.y < 0):
+        #     del enemy_s_list[0]
 #--------------------------------------------------------------------------------------------#
     def draw(self):
         self.image.clip_draw( self.frame * 34, 280, 34, 30 , self.x, self.y )
@@ -291,21 +362,26 @@ class Enemy_s:
 class Enemy_g:
     SHOT_PER_SEC = 1
     image = None
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
 
     def __init__(self):
         self.x, self.y = random.randint(50, 750), 600
         self.frame = 8
         self.hp = 30
         self.missile_count = 0
+        self.speed = 100
+        self.total_frame = 0
 
         if self.image == None:
             self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self):
-        self.y -= 1
-        self.missile_count += 0.02
+    def update(self, frame_time):
+        self.y -= self.speed * frame_time
+        self.missile_count += frame_time
 
-        if self.missile_count > 1 :
+        if self.missile_count > 1.5 :
             enemy_missile = Enemy_Missile(self.x, self.y)
             enemy_missile_list.append(enemy_missile)
             self.missile_count = 0
@@ -322,13 +398,20 @@ class Enemy_g:
 ################################################################################################
 
 class Enemy_s_death :   # 스커지 죽음 모션
+
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
+
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
+        self.total_frame = 0
         self.image = load_image('Char/Scourge.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self) :
-        self.frame = (self.frame + 1) % 5
+    def update(self, frame_time) :
+        self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
+        self.frame = int(self.total_frame) % 5
         if (self.frame == 4) :
             return True
         else :
@@ -339,13 +422,19 @@ class Enemy_s_death :   # 스커지 죽음 모션
 ################################################################################################
 
 class Enemy_g_death :   # 가디언 죽음 모션
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
+
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
+        self.total_frame = 0
         self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self) :
-        self.frame = (self.frame + 1) % 5
+    def update(self, frame_time) :
+        self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
+        self.frame = int(self.total_frame) % 5
         if (self.frame == 4) :
             return True
         else :
@@ -356,47 +445,55 @@ class Enemy_g_death :   # 가디언 죽음 모션
 
 ###################################################################################
 class Boss:
+    global frame_time
+    SHOT_PER_SEC = 1
 
     image = None
-    LEFT_MOVE, RIGHT_MOVE = -1, 1
 
     def __init__(self):
         self.x, self.y = 400, 500
         self.frame = 8
-        self.hp = 50
+        self.hp = 100
         self.missile_count = 0
-        self.direction = self.LEFT_MOVE
+        self.speed = 150
 
         if Boss.image == None:
             self.image = load_image('Char/Devourer.png')
 #--------------------------------------------------------------------------------------------#
-    def update(self):
-        self.missile_count += 0.01
-        if self.missile_count > 1 :
+    def update(self, frame_time):
+        self.missile_count += frame_time
+        if self.missile_count > 2 :
 
-            enemy_missile_1 = Enemy_Missile(self.x-30, self.y-5)
-            enemy_missile_2 = Enemy_Missile(self.x-90, self.y-5)
-            enemy_missile_3 = Enemy_Missile(self.x-150, self.y-5)
-            enemy_missile_4 = Enemy_Missile(self.x+30, self.y-5)
-            enemy_missile_5 = Enemy_Missile(self.x+65, self.y-5)
-            enemy_missile_6 = Enemy_Missile(self.x+100, self.y-5)
+            # 일직선 미사일
+            enemy_missile_1 = Enemy_Missile(self.x, self.y+20)
+            # enemy_missile_4 = Enemy_Missile(self.x+30, self.y+20)
+
+            # 왼쪽 대각선 미사일
+            enemy_missile_2 = Boss_Left_Missile(self.x-30, self.y+20)
+            # enemy_missile_3 = Boss_Left_Missile(self.x-100, self.y+20)
+
+            # 오른쪽 대각선 미사일
+            enemy_missile_5 = Boss_Right_Missile(self.x+30, self.y+20)
+            # enemy_missile_6 = Boss_Right_Missile(self.x+100, self.y+20)
 
             enemy_missile_list.append(enemy_missile_1)
+            # enemy_missile_list.append(enemy_missile_4)
             enemy_missile_list.append(enemy_missile_2)
-            enemy_missile_list.append(enemy_missile_3)
-            enemy_missile_list.append(enemy_missile_4)
+            # enemy_missile_list.append(enemy_missile_3)
             enemy_missile_list.append(enemy_missile_5)
-            enemy_missile_list.append(enemy_missile_6)
+            # enemy_missile_list.append(enemy_missile_6)
+
             self.missile_count = 0
 
-            self.y -= 0.1
-            if(self.y <= 500) :
-                self.y = 500
-                self.x += 10 * self.direction
-                if(self.x <= 200) :
-                    self.direction = self.RIGHT_MOVE
-                elif(self.x >= 600) :
-                    self.direction = self.LEFT_MOVE
+            # if boss.x <= 200 :
+            #     boss.x += 20
+            # elif boss.x >= 600 :
+            #     boss.x -= 20
+
+            # if(self.x <= 200) :
+            #     self.x += self.speed * frame_time
+            # elif(self.x >= 600) :
+            #     self.x -= self.speed * frame_time
 
 #--------------------------------------------------------------------------------------------#
     def draw(self):
@@ -410,13 +507,20 @@ class Boss:
 
 ########################################################################
 class Boss_death :  # 디바우러 죽음 모션
+
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
+
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
+        self.total_frame = 0
         self.image = load_image('Char/Devourer.png')
 #--------------------------------------------------------------------------------------------#
     def update(self) :
-        self.frame = (self.frame + 1) % 5
+        self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
+        self.frame = int(self.total_frame) % 5
         if (self.frame == 4) :
             return True
         else :
@@ -459,27 +563,40 @@ def collide(a, b):  # 충돌체크
 #############################################################################
 class Explosion:    #플레이어 폭발시 호출
 
+    TIME_PER_ACTION = 0.5
+    ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+    FRAMES_PER_ACTION = 6
+
     def __init__(self, x, y):
         self.x, self.y = x, y
         self.frame = 0
+        self.total_frame = 0
         self.image = load_image('Char/Explosion.png' )
 
-    def update(self):
-        self.frame = (self.frame + 1)  % 16
-
-        if(self.frame == 15):
+    def update(self, frame_time):
+        self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
+        self.frame = int(self.total_frame) % 16
+        if (self.frame == 15) :
             return True
-        else:
+        else :
             return False
-
     def draw(self):
         self.image.clip_draw(int(self.frame %4)*120, 360-int(self.frame//4)*120, 120, 120, self.x, self.y)
+
+############################################################################################################################################################
+
+def get_frame_time():
+    global current_time
+
+    frame_time = get_time() - current_time
+    current_time += frame_time
+    return frame_time
 
 ############################################################################################################################################################
 def enter():
 
     global background, timer, player, enemy_s_list, enemy_g_list, enemy_boss_list,\
-        enemy_missile_list, Missile_List, enemy_death, explosion
+        enemy_missile_list, Missile_List, enemy_death, explosion, skill_list, boss_left_list, boss_right_list
 
     background = Background()
     player = Player()
@@ -489,8 +606,11 @@ def enter():
     enemy_g_list = []       # 가디언 리스트
     enemy_boss_list = []    # 디바우러 리스트
 
-    enemy_missile_list = [] # 가디언 미사일 리스트
     Missile_List = []       # 플레이어 미사일 리스트
+    enemy_missile_list = [] # 가디언 미사일 리스트
+    boss_left_list = []     # 보스 왼쪽 미사일
+    boss_right_list = []    # 보스 오른쪽 미사일
+    skill_list = []         # 스킬 리스트
 
     enemy_death = []        # 적 폭발 리스트
     explosion = []          # 플레이어 폭발 리스트
@@ -507,6 +627,7 @@ def exit():
 
     del(Missile_List)
     del(enemy_missile_list)
+    del(skill_list)
 
     del(enemy_death)
     del(explosion)
@@ -525,31 +646,57 @@ def resume():
 
 def update():
     global background, timer, player, enemy_s_list, enemy_g_list, enemy_boss_list,\
-        enemy_missile_list, Missile_List, enemy_death, explosion
+        enemy_missile_list, Missile_List, enemy_death, explosion, skill_list, frame_time
+
+    frame_time = get_frame_time()
 #--------------------------------------------------------------------------------------------#
-    background.update()
-    timer.update()
-    player.update()
+    background.update(frame_time)
+    timer.update(frame_time)
+    player.update(frame_time)
 #--------------------------------------------------------------------------------------------#
     # 적 업데이트
     for enemy_s in enemy_s_list:
-        enemy_s.update()
+        enemy_s.update(frame_time)
+        if enemy_s.y <= 0:
+            enemy_s_list.remove(enemy_s)
+
     for enemy_g in enemy_g_list:
-        enemy_g.update()
+        enemy_g.update(frame_time)
+        if enemy_g.y <= 0:
+            enemy_g_list.remove(enemy_g)
+
     for boss in enemy_boss_list:
-        boss.update()
+        boss.update(frame_time)
 #--------------------------------------------------------------------------------------------#
-    # 적 미사일 업데이트
+    # 미사일 업데이트
     for missile in Missile_List:
-        missile.update()
+        missile.update(frame_time)
+        if missile.y >= 600:
+            Missile_List.remove(missile)
+
     for missile in enemy_missile_list:
-        missile.update()
+        missile.update(frame_time)
+        if missile.y <= 0:
+            enemy_missile_list.remove(missile)
+
+    for missile in boss_left_list:
+        missile.update(frame_time)
+        if missile.y <= 0:
+            boss_left_list.remove(missile)
+
+    for missile in boss_right_list:
+        missile.update(frame_time)
+        if missile.y <= 0:
+            boss_right_list.remove(missile)
+
+    for skill in skill_list:
+        skill.update(frame_time)
 #--------------------------------------------------------------------------------------------#
     # 폭발 업데이트
     for death in enemy_death:
-        death.update()
+        death.update(frame_time)
     for player_explosion in explosion:
-        player_explosion.update()
+        player_explosion.update(frame_time)
 #--------------------------------------------------------------------------------------------#
     # 플레이어 미사일 + 스커지 충돌체크
     for player_missile in Missile_List:
@@ -557,6 +704,20 @@ def update():
             if collide( player_missile, enemy_s ):  # 충돌체크가 Ture이면
                 Missile_List.remove( player_missile )
                 enemy_s.hp -= 10
+
+                if enemy_s.hp <= 0:
+                    # 스커지 죽는 draw함수 불러옴
+                    enemy_s_kill = Enemy_s_death( enemy_s.x, enemy_s.y )
+                    enemy_death.append(enemy_s_kill)
+                    enemy_s_list.remove( enemy_s )
+                    timer.score += 1
+
+#--------------------------------------------------------------------------------------------#
+    # 스킬 + 스커지 충돌체크
+    for skill in skill_list:
+        for enemy_s in enemy_s_list:
+            if collide( skill, enemy_s ):  # 충돌체크가 Ture이면
+                enemy_s.hp -= 100
 
                 if enemy_s.hp <= 0:
                     # 스커지 죽는 draw함수 불러옴
@@ -578,6 +739,21 @@ def update():
                     enemy_death.append(enemy_g_kill)
                     enemy_g_list.remove( enemy_g )
                     timer.score += 2
+
+#--------------------------------------------------------------------------------------------#
+    # 스킬 + 가디언 충돌체크
+    for skill in skill_list:
+        for enemy_g in enemy_g_list:
+            if collide( skill, enemy_g ):  # 충돌체크가 Ture이면
+                enemy_g.hp -= 100
+
+                if enemy_g.hp <= 0:
+                    # 스커지 죽는 draw함수 불러옴
+                    enemy_g_kill = Enemy_s_death( enemy_g.x, enemy_g.y )
+                    enemy_death.append(enemy_g_kill)
+                    enemy_g_list.remove( enemy_g )
+                    timer.score += 1
+
 #--------------------------------------------------------------------------------------------#
     # 플레이어 미사일 + 디바우러 충돌체크
     for player_missile in Missile_List:
@@ -593,6 +769,21 @@ def update():
                     enemy_boss_list.remove( boss )
                     timer.bcnt = 0
                     timer.score += 5
+
+#--------------------------------------------------------------------------------------------#
+    # 스킬 + 디바우러 충돌체크
+    for skill in skill_list:
+        for boss in enemy_boss_list:
+            if collide( skill, boss ):  # 충돌체크가 Ture이면
+                boss.hp -= 100
+
+                if boss.hp <= 0:
+                    # 스커지 죽는 draw함수 불러옴
+                    boss_kill = Enemy_s_death( boss.x, boss.y )
+                    enemy_death.append(boss_kill)
+                    enemy_boss_list.remove( boss )
+                    timer.score += 1
+
 #--------------------------------------------------------------------------------------------#
     # 스커지 몸체 + 플레이어 충돌체크
     for enemy_s in enemy_s_list:
@@ -614,6 +805,7 @@ def update():
 
 #############################################################################
 def draw():
+    global frame_time
 
     handle_events()
     clear_canvas()
@@ -641,19 +833,24 @@ def draw():
     for missile in enemy_missile_list:
         missile.draw()
         missile.draw_bb()
+    for skill in skill_list:
+        skill.draw()
+        skill.draw_bb()
 #--------------------------------------------------------------------------------------------#
     # 폭발 그리기
     for death in enemy_death:
-        is_die = death.update()
+        is_die = death.update(frame_time)
         death.draw()
         if is_die == False:
-            enemy_death.remove(death)
+            if death.total_frame >= 5:
+                enemy_death.remove(death)
 
     for player_explosion in explosion:
-        is_die = player_explosion.update()
+        is_die = player_explosion.update(frame_time)
         player_explosion.draw()
         if is_die == False:
-            explosion.remove(player_explosion)
+            if player_explosion.total_frame >= 5:
+                explosion.remove(player_explosion)
 #--------------------------------------------------------------------------------------------#
     update_canvas()
 
