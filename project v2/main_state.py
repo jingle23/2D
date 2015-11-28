@@ -74,6 +74,9 @@ class Timer :
 class Background:
 
     def __init__(self):
+        self.bgm = load_music('Sound/terran-3.mp3')
+        self.bgm.set_volume(64)
+        self.bgm.repeat_play()
         self.image = load_image('Background/background.png')
         self.y = 0
 #--------------------------------------------------------------------------------------------#
@@ -102,6 +105,8 @@ class Player:
         self.hp = 100
         self.speed = 250
         self.total_frame = 0
+        self.shoot_sound = load_wav('Sound/my_plane_sound.wav')
+        self.shoot_sound.set_volume(20)
 
         if Player.image == None:
             self.image = load_image('Char/Player.png')
@@ -111,6 +116,7 @@ class Player:
         ## 미사일 발사
         if(event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
             player.missile_shoot()
+            player.sound()
 
         # 스킬1 사용
         elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_x):
@@ -198,11 +204,13 @@ class Player:
     def missile_shoot(self):
         newmissile = Missile(self.x, self.y)
         Missile_List.append(newmissile)
-# #--------------------------------------------------------------------------------------------#
+#--------------------------------------------------------------------------------------------#
     def skill_shoot(self):
         newmissile = Skill(self.x, self.y + 200)
         skill_list.append(newmissile)
-
+#--------------------------------------------------------------------------------------------#
+    def sound(self):
+        self.shoot_sound.play()
 ################################################################################################
 class Missile:
 
@@ -221,7 +229,6 @@ class Missile:
 #--------------------------------------------------------------------------------------------#
     def get_bb(self):
         return self.x - 20, self.y - 30, self.x + 20 , self.y + 30
-
 ################################################################################################
 class Enemy_Missile:
 
@@ -336,6 +343,8 @@ class Enemy_s:
         self.hp = 20
         self.speed = 600
         self.total_frame = 0
+        self.sdeath_sound = load_wav('Sound/Sdeath.wav')
+        self.sdeath_sound.set_volume(30)
 
         if self.image == None:
             self.image = load_image('Char/Scourge.png')
@@ -356,7 +365,9 @@ class Enemy_s:
 #--------------------------------------------------------------------------------------------#
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20 , self.y + 20
-
+#--------------------------------------------------------------------------------------------#
+    def sound(self):
+        self.sdeath_sound.play()
 ########################################################################
 
 class Enemy_g:
@@ -373,6 +384,8 @@ class Enemy_g:
         self.missile_count = 0
         self.speed = 100
         self.total_frame = 0
+        # self.gdeath_sound = load_wav('Sound/Sdeath.wav')
+        # self.gdeath_sound.set_volume(30)
 
         if self.image == None:
             self.image = load_image('Char/Guardian.png')
@@ -466,22 +479,16 @@ class Boss:
 
             # 일직선 미사일
             enemy_missile_1 = Enemy_Missile(self.x, self.y+20)
-            # enemy_missile_4 = Enemy_Missile(self.x+30, self.y+20)
 
             # 왼쪽 대각선 미사일
             enemy_missile_2 = Boss_Left_Missile(self.x-30, self.y+20)
-            # enemy_missile_3 = Boss_Left_Missile(self.x-100, self.y+20)
 
             # 오른쪽 대각선 미사일
             enemy_missile_5 = Boss_Right_Missile(self.x+30, self.y+20)
-            # enemy_missile_6 = Boss_Right_Missile(self.x+100, self.y+20)
 
             enemy_missile_list.append(enemy_missile_1)
-            # enemy_missile_list.append(enemy_missile_4)
             enemy_missile_list.append(enemy_missile_2)
-            # enemy_missile_list.append(enemy_missile_3)
             enemy_missile_list.append(enemy_missile_5)
-            # enemy_missile_list.append(enemy_missile_6)
 
             self.missile_count = 0
 
@@ -706,6 +713,7 @@ def update():
                 enemy_s.hp -= 10
 
                 if enemy_s.hp <= 0:
+                    enemy_s.sound()
                     # 스커지 죽는 draw함수 불러옴
                     enemy_s_kill = Enemy_s_death( enemy_s.x, enemy_s.y )
                     enemy_death.append(enemy_s_kill)
