@@ -105,8 +105,19 @@ class Player:
         self.hp = 100
         self.speed = 250
         self.total_frame = 0
-        self.shoot_sound = load_wav('Sound/my_plane_sound.wav')
-        self.shoot_sound.set_volume(20)
+
+        self.shoot_sound = load_wav('Sound/missile.wav')
+        self.shoot_sound.set_volume(15)
+        self.sdeath_sound = load_wav('Sound/Sdeath.wav')
+        self.sdeath_sound.set_volume(20)
+        self.gdeath_sound = load_wav('Sound/Gdeath.wav')
+        self.gdeath_sound.set_volume(35)
+        self.ddeath_sound = load_wav('Sound/Ddeath.wav')
+        self.ddeath_sound.set_volume(30)
+        self.hit_sound = load_wav('Sound/hit.wav')
+        self.hit_sound.set_volume(30)
+        self.skill_sound = load_wav('Sound/Skill.wav')
+        self.skill_sound.set_volume(30)
 
         if Player.image == None:
             self.image = load_image('Char/Player.png')
@@ -120,6 +131,7 @@ class Player:
 
         # 스킬1 사용
         elif(event.type, event.key) == (SDL_KEYDOWN, SDLK_x):
+            player.sound6()
             if timer.skill >= 1:
                 player.skill_shoot()
                 timer.skill -= 1
@@ -211,6 +223,21 @@ class Player:
 #--------------------------------------------------------------------------------------------#
     def sound(self):
         self.shoot_sound.play()
+#--------------------------------------------------------------------------------------------#
+    def sound2(self):
+        self.sdeath_sound.play()
+#--------------------------------------------------------------------------------------------#
+    def sound3(self):
+        self.gdeath_sound.play()
+#--------------------------------------------------------------------------------------------#
+    def sound4(self):
+        self.ddeath_sound.play()
+#--------------------------------------------------------------------------------------------#
+    def sound5(self):
+        self.hit_sound.play()
+#--------------------------------------------------------------------------------------------#
+    def sound6(self):
+        self.skill_sound.play()
 ################################################################################################
 class Missile:
 
@@ -343,8 +370,6 @@ class Enemy_s:
         self.hp = 20
         self.speed = 600
         self.total_frame = 0
-        self.sdeath_sound = load_wav('Sound/Sdeath.wav')
-        self.sdeath_sound.set_volume(30)
 
         if self.image == None:
             self.image = load_image('Char/Scourge.png')
@@ -365,9 +390,7 @@ class Enemy_s:
 #--------------------------------------------------------------------------------------------#
     def get_bb(self):
         return self.x - 20, self.y - 20, self.x + 20 , self.y + 20
-#--------------------------------------------------------------------------------------------#
-    def sound(self):
-        self.sdeath_sound.play()
+
 ########################################################################
 
 class Enemy_g:
@@ -409,7 +432,6 @@ class Enemy_g:
         return self.x - 40, self.y - 30, self.x + 35 , self.y + 30
 
 ################################################################################################
-
 class Enemy_s_death :   # 스커지 죽음 모션
 
     TIME_PER_ACTION = 0.5
@@ -421,6 +443,7 @@ class Enemy_s_death :   # 스커지 죽음 모션
         self.frame = 0
         self.total_frame = 0
         self.image = load_image('Char/Scourge.png')
+
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
@@ -432,6 +455,7 @@ class Enemy_s_death :   # 스커지 죽음 모션
 #--------------------------------------------------------------------------------------------#
     def draw(self) :
         self.image.clip_draw( self.frame * 70 ,85, 60, 65 , self.x, self.y)
+
 ################################################################################################
 
 class Enemy_g_death :   # 가디언 죽음 모션
@@ -526,7 +550,7 @@ class Boss_death :  # 디바우러 죽음 모션
         self.image = load_image('Char/Devourer.png')
 #--------------------------------------------------------------------------------------------#
     def update(self) :
-        self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
+        self.total_frame += frame_time * Boss_death.FRAMES_PER_ACTION * Boss_death.ACTION_PER_TIME
         self.frame = int(self.total_frame) % 5
         if (self.frame == 4) :
             return True
@@ -713,7 +737,7 @@ def update():
                 enemy_s.hp -= 10
 
                 if enemy_s.hp <= 0:
-                    enemy_s.sound()
+                    player.sound2()
                     # 스커지 죽는 draw함수 불러옴
                     enemy_s_kill = Enemy_s_death( enemy_s.x, enemy_s.y )
                     enemy_death.append(enemy_s_kill)
@@ -728,6 +752,7 @@ def update():
                 enemy_s.hp -= 100
 
                 if enemy_s.hp <= 0:
+                    player.sound2()
                     # 스커지 죽는 draw함수 불러옴
                     enemy_s_kill = Enemy_s_death( enemy_s.x, enemy_s.y )
                     enemy_death.append(enemy_s_kill)
@@ -742,6 +767,7 @@ def update():
                 Missile_List.remove( player_missile )
                 enemy_g.hp -= 10
                 if enemy_g.hp <= 0:
+                    player.sound3()
                     # 가디언 죽는 draw함수 불러옴
                     enemy_g_kill = Enemy_g_death( enemy_g.x, enemy_g.y )
                     enemy_death.append(enemy_g_kill)
@@ -756,8 +782,8 @@ def update():
                 enemy_g.hp -= 100
 
                 if enemy_g.hp <= 0:
-                    # 스커지 죽는 draw함수 불러옴
-                    enemy_g_kill = Enemy_s_death( enemy_g.x, enemy_g.y )
+                    player.sound3()
+                    enemy_g_kill = Enemy_g_death( enemy_g.x, enemy_g.y )
                     enemy_death.append(enemy_g_kill)
                     enemy_g_list.remove( enemy_g )
                     timer.score += 1
@@ -771,8 +797,8 @@ def update():
                 Missile_List.remove( player_missile )
                 boss.hp -= 10
                 if boss.hp <= 0:
-                    # 가디언 죽는 draw함수 불러옴
-                    boss_kill = Boss_death( boss.x, boss.y )
+                    player.sound4()
+                    boss_kill = Enemy_g_death( boss.x, boss.y )
                     enemy_death.append(boss_kill)
                     enemy_boss_list.remove( boss )
                     timer.bcnt = 0
@@ -784,18 +810,19 @@ def update():
         for boss in enemy_boss_list:
             if collide( skill, boss ):  # 충돌체크가 Ture이면
                 boss.hp -= 100
-
                 if boss.hp <= 0:
-                    # 스커지 죽는 draw함수 불러옴
-                    boss_kill = Enemy_s_death( boss.x, boss.y )
+                    player.sound4()
+                    boss_kill = Enemy_g_death( boss.x, boss.y )
                     enemy_death.append(boss_kill)
                     enemy_boss_list.remove( boss )
-                    timer.score += 1
+                    timer.bcnt = 0
+                    timer.score += 5
 
 #--------------------------------------------------------------------------------------------#
     # 스커지 몸체 + 플레이어 충돌체크
     for enemy_s in enemy_s_list:
         if collide( enemy_s, player ):
+            player.sound5()
             player.hp -= 100
             enemy_s_list.remove(enemy_s)
             if player.hp <= 0:
@@ -805,6 +832,7 @@ def update():
     # 가디언 미사일 + 플레이어 충돌체크
     for enemy_missile in enemy_missile_list:
         if collide( enemy_missile, player ):
+            player.sound5()
             enemy_missile_list.remove( enemy_missile )
             player.hp -= 35
             if player.hp <= 0:
