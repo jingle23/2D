@@ -4,6 +4,8 @@ from pico2d import *
 
 import game_framework
 import title_state
+import stage2
+import gameover_state
 
 name = "MainState"
 
@@ -16,10 +18,6 @@ boss = None
 frame_time = 0
 current_time =0.0
 
-## 캐릭터 HP 넣고
-## 스테이지2 state
-## 스테이지2 구성? 적의 미사일 더 많이, 속도 더 빠르게, 체력 더 높게
-
 ################################################################################################
 class Timer :
     global frame_time
@@ -31,6 +29,7 @@ class Timer :
         self.scnt = 0   # 스커지 생성 수
         self.gcnt = 0   # 가디언 생성 수
         self.bcnt = 0   # 보스 생성 수
+        self.bosskill = 0
 
         self.score = 0  # 점수
         self.skill = 100  # 사용가능 스킬 횟수
@@ -106,12 +105,12 @@ class Player:
         self.x, self.y = 400, 100
         self.frame = 3
         self.state = self.STAND
-        self.hp = 100
+        self.hp = 500
         self.speed = 250
         self.total_frame = 0
 
         self.shoot_sound = load_wav('Sound/missile.wav')
-        self.shoot_sound.set_volume(15)
+        self.shoot_sound.set_volume(13)
         self.sdeath_sound = load_wav('Sound/Sdeath.wav')
         self.sdeath_sound.set_volume(20)
         self.gdeath_sound = load_wav('Sound/Gdeath.wav')
@@ -702,6 +701,13 @@ def update():
 
     for boss in enemy_boss_list:
         boss.update(frame_time)
+
+    if timer.bosskill >= 2:
+        game_framework.push_state(stage2)
+
+    if player.hp <= 0:
+        game_framework.push_state(gameover_state)
+
 #--------------------------------------------------------------------------------------------#
     # 미사일 업데이트
     for missile in Missile_List:
@@ -805,6 +811,7 @@ def update():
                     boss_kill = Enemy_g_death( boss.x, boss.y )
                     enemy_death.append(boss_kill)
                     enemy_boss_list.remove( boss )
+                    timer.bosskill += 1
                     timer.bcnt = 0
                     timer.score += 5
 
@@ -819,6 +826,7 @@ def update():
                     boss_kill = Enemy_g_death( boss.x, boss.y )
                     enemy_death.append(boss_kill)
                     enemy_boss_list.remove( boss )
+                    timer.bosskill += 1
                     timer.bcnt = 0
                     timer.score += 5
 
