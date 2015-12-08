@@ -5,7 +5,7 @@ import main_state
 import next_stage
 
 from pico2d import *
-# 게임오버 추가
+
 name = "stage2"
 image = None
 

@@ -105,7 +105,7 @@ class Player:
         self.x, self.y = 400, 100
         self.frame = 3
         self.state = self.STAND
-        self.hp = 500
+        self.hp = 5000
         self.speed = 250
         self.total_frame = 0
 
@@ -244,9 +244,12 @@ class Player:
 ################################################################################################
 class Missile:
 
+    image = None
+
     def __init__(self, x, y) :
         self.x, self.y = x, y
-        self.image = load_image('Char/missile_1.png')
+        if Missile.image == None:
+            self.image = load_image('Char/missile_1.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.y += 500 * frame_time
@@ -262,10 +265,13 @@ class Missile:
 ################################################################################################
 class Enemy_Missile:
 
+    image = None
+
     def __init__(self, x, y):
         self.x , self.y = x, y
         self.frame = 0
-        self.image = load_image('Char/Guardian.png')
+        if Enemy_Missile.image == None:
+            self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
         self.y -= 500 * frame_time
@@ -283,10 +289,13 @@ class Enemy_Missile:
 ################################################################################################
 class Boss_Left_Missile:
 
+    image = None
+
     def __init__(self, x, y):
         self.x , self.y = x, y
         self.frame = 0
-        self.image = load_image('Char/Guardian.png')
+        if Boss_Left_Missile.image == None:
+            self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
         self.x -= self.x / self.y
@@ -305,10 +314,13 @@ class Boss_Left_Missile:
 ################################################################################################
 class Boss_Right_Missile:
 
+    image = None
+
     def __init__(self, x, y):
         self.x , self.y = x, y
         self.frame = 0
-        self.image = load_image('Char/Guardian.png')
+        if Boss_Right_Missile.image == None:
+            self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
         self.x += self.x / self.y
@@ -332,11 +344,15 @@ class Skill :
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 6
 
+    image = None
+
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
         self.total_frame = 0
-        self.image = load_image('Char/skill.png')
+
+        if Skill.image == None:
+            self.image = load_image('Char/skill.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.total_frame += frame_time * Skill.FRAMES_PER_ACTION * Skill.ACTION_PER_TIME
@@ -440,12 +456,14 @@ class Enemy_s_death :   # 스커지 죽음 모션
     TIME_PER_ACTION = 0.5
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 6
+    image = None
 
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
         self.total_frame = 0
-        self.image = load_image('Char/Scourge.png')
+        if Enemy_s_death.image == None:
+            self.image = load_image('Char/Scourge.png')
 
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
@@ -465,12 +483,14 @@ class Enemy_g_death :   # 가디언 죽음 모션
     TIME_PER_ACTION = 0.5
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 6
+    image = None
 
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
         self.total_frame = 0
-        self.image = load_image('Char/Guardian.png')
+        if Enemy_g_death.image == None:
+            self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
@@ -545,12 +565,14 @@ class Boss_death :  # 디바우러 죽음 모션
     TIME_PER_ACTION = 0.5
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 6
+    image = None
 
     def __init__(self, x, y) :
         self.x, self.y = x, y
         self.frame = 0
         self.total_frame = 0
-        self.image = load_image('Char/Devourer.png')
+        if Boss_death.image == None:
+            self.image = load_image('Char/Devourer.png')
 #--------------------------------------------------------------------------------------------#
     def update(self) :
         self.total_frame += frame_time * Boss_death.FRAMES_PER_ACTION * Boss_death.ACTION_PER_TIME
@@ -600,12 +622,14 @@ class Explosion:    #플레이어 폭발시 호출
     TIME_PER_ACTION = 0.5
     ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
     FRAMES_PER_ACTION = 6
+    image = None
 
     def __init__(self, x, y):
         self.x, self.y = x, y
         self.frame = 0
         self.total_frame = 0
-        self.image = load_image('Char/Explosion.png' )
+        if Explosion.image == None:
+            self.image = load_image('Char/Explosion.png' )
 
     def update(self, frame_time):
         self.total_frame += frame_time * Enemy_s_death.FRAMES_PER_ACTION * Enemy_s_death.ACTION_PER_TIME
