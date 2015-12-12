@@ -2,7 +2,7 @@ __author__ = '김진근'
 __author__ = '김진근'
 import game_framework
 import main_state
-import next_stage
+import start_state
 
 from pico2d import *
 
@@ -32,7 +32,7 @@ def handle_events():
                 game_framework.quit()
 
             elif (event.type, event.key) == (SDL_KEYDOWN, SDLK_SPACE):
-                game_framework.change_state(next_stage)
+                game_framework.change_state(start_state)
 
 
 def draw():

@@ -32,7 +32,7 @@ class Timer :
         self.bosskill = 0
 
         self.score = 0  # 점수
-        self.skill = 100  # 사용가능 스킬 횟수
+        self.skill = 99  # 사용가능 스킬 횟수
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.time += frame_time
@@ -430,7 +430,8 @@ class Enemy_g:
         # self.gdeath_sound.set_volume(30)
 
         if self.image == None:
-            self.image = load_image('Char/Guardian.png')
+            # self.image = load_image('Char/Guardian.png')
+            self.image = load_image('Char/Mutalisk.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
         self.y -= self.speed * frame_time
@@ -442,7 +443,8 @@ class Enemy_g:
             self.missile_count = 0
 #--------------------------------------------------------------------------------------------#
     def draw(self):
-        self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
+        # self.image.clip_draw( self.frame * 81, 700, 81, 70 , self.x, self.y )
+        self.image.clip_draw( self.frame * 67, 400, 65, 70 , self.x, self.y )
 #--------------------------------------------------------------------------------------------#
     def draw_bb(self):
         draw_rectangle( *self.get_bb() )
@@ -726,7 +728,7 @@ def update():
     for boss in enemy_boss_list:
         boss.update(frame_time)
 
-    if timer.bosskill >= 2:
+    if timer.bosskill >= 1:
         game_framework.push_state(stage2)
 
     if player.hp <= 0:
@@ -861,9 +863,9 @@ def update():
             player.sound5()
             player.hp -= 100
             enemy_s_list.remove(enemy_s)
-            if player.hp <= 0:
-                player_explosion = Explosion(player.x, player.y)
-                explosion.append(player_explosion)
+            # if player.hp <= 0:
+            player_explosion = Explosion(player.x, player.y)
+            explosion.append(player_explosion)
 #--------------------------------------------------------------------------------------------#
     # 가디언 미사일 + 플레이어 충돌체크
     for enemy_missile in enemy_missile_list:
@@ -871,9 +873,9 @@ def update():
             player.sound5()
             enemy_missile_list.remove( enemy_missile )
             player.hp -= 35
-            if player.hp <= 0:
-                player_explosion = Explosion(player.x, player.y)
-                explosion.append(player_explosion)
+            # if player.hp <= 0:
+            player_explosion = Explosion(player.x, player.y)
+            explosion.append(player_explosion)
 
 #############################################################################
 def draw():
@@ -884,30 +886,30 @@ def draw():
 
     background.draw()
     player.draw()
-    player.draw_bb()
+    # player.draw_bb()
     timer.draw()
 #--------------------------------------------------------------------------------------------#
     # 적 몸체 그리기
     for enemy_s in enemy_s_list:
         enemy_s.draw()
-        enemy_s.draw_bb()
+        # enemy_s.draw_bb()
     for enemy_g in enemy_g_list:
         enemy_g.draw()
-        enemy_g.draw_bb()
+        # enemy_g.draw_bb()
     for boss in enemy_boss_list:
         boss.draw()
-        boss.draw_bb()
+        # boss.draw_bb()
 #--------------------------------------------------------------------------------------------#
     # 미사일 그리기
     for missile in Missile_List:
         missile.draw()
-        missile.draw_bb()
+        # missile.draw_bb()
     for missile in enemy_missile_list:
         missile.draw()
-        missile.draw_bb()
+        # missile.draw_bb()
     for skill in skill_list:
         skill.draw()
-        skill.draw_bb()
+        # skill.draw_bb()
 #--------------------------------------------------------------------------------------------#
     # 폭발 그리기
     for death in enemy_death:
