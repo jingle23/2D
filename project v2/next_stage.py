@@ -31,7 +31,7 @@ class Timer :
         self.bcnt = 0   # 보스 생성 수
 
         self.score = 0  # 점수
-        self.skill = 99  # 사용가능 스킬 횟수
+        self.skill = 3  # 사용가능 스킬 횟수
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time) :
         self.time += frame_time
@@ -41,24 +41,26 @@ class Timer :
             self.scnt += 1.2
             self.time = 0
 
-        if self.scnt >= 4:
+        if self.scnt >= 3:
             self.create_enemy_g()
             self.gcnt += 1
             self.scnt = 0
 
-        if (self.gcnt >= 20) and (self.bcnt == 0) :
+        if (self.gcnt >= 30) and (self.bcnt == 0) :
             self.create_enemy_boss()
             self.bcnt = 1
             self.gcnt = 0
 
-        if self.score >= 20:
+        if self.score >= 10:
             self.skill += 1
             self.score = 0
 
 #--------------------------------------------------------------------------------------------#
     def draw(self) :
-        self.font.draw(0, 580, " SCORE : %02d " %(self.score), (255, 255, 255))
-        self.font.draw(670, 580, " SKILL : %01d " %(self.skill), (255, 255, 255))
+        self.font.draw(0, 580, " Score : %02d " %(self.score), (255, 255, 255))
+        self.font.draw(600, 580, " Skill Point : %01d " %(self.skill), (255, 255, 255))
+        self.font.draw(0, 20, " Shild : %03d"  %(player.hp), (255, 255, 255))
+
 
     def create_enemy_s(self) :
         new_enemy_s = Enemy_s()
@@ -90,6 +92,9 @@ class Background:
         self.y += 1
         if(self.y >= 600):
             self.y = 0
+
+        if player.hp <= 0:
+            self.bgm.set_volume(0)
 ################################################################################################
 class Player:
 
@@ -104,7 +109,7 @@ class Player:
         self.x, self.y = 400, 100
         self.frame = 3
         self.state = self.STAND
-        self.hp = 5000
+        self.hp = 200
         self.speed = 250
         self.total_frame = 0
 
@@ -288,7 +293,8 @@ class Boss_Left_Missile:
         self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
-        self.x -= self.x / self.y
+        # self.x -= self.x / self.y
+        self.x -= 2
         self.y -= 500 * frame_time
 #--------------------------------------------------------------------------------------------#
     def draw(self):
@@ -310,7 +316,8 @@ class Boss_Right_Missile:
         self.image = load_image('Char/Guardian.png')
 #--------------------------------------------------------------------------------------------#
     def update(self, frame_time):
-        self.x += self.x / self.y
+        # self.x += self.x / self.y
+        self.x += 2
         self.y -= 500 * frame_time
 #--------------------------------------------------------------------------------------------#
     def draw(self):
@@ -369,7 +376,7 @@ class Enemy_s:
     def __init__(self):
         self.x, self.y = random.randint(50, 750), 650
         self.frame = 8
-        self.hp = 20
+        self.hp = 30
         self.speed = 800
         self.total_frame = 0
 
@@ -405,7 +412,7 @@ class Enemy_g:
     def __init__(self):
         self.x, self.y = random.randint(50, 750), 600
         self.frame = 8
-        self.hp = 30
+        self.hp = 40
         self.missile_count = 0
         self.speed = 100
         self.total_frame = 0
@@ -419,7 +426,7 @@ class Enemy_g:
         self.y -= self.speed * frame_time
         self.missile_count += frame_time
 
-        if self.missile_count > 1.3 :
+        if self.missile_count > 1.0 :
             enemy_missile = Enemy_Missile(self.x, self.y)
             enemy_missile_list.append(enemy_missile)
             self.missile_count = 0
@@ -504,30 +511,24 @@ class Boss:
         if self.missile_count > 2 :
 
             # 일직선 미사일
-            enemy_missile_1 = Enemy_Missile(self.x, self.y+20)
+            enemy_missile_1 = Enemy_Missile(self.x, self.y+30)
 
             # 왼쪽 대각선 미사일
             enemy_missile_2 = Boss_Left_Missile(self.x-30, self.y+20)
+            enemy_missile_4= Boss_Left_Missile(self.x-80, self.y)
 
             # 오른쪽 대각선 미사일
             enemy_missile_5 = Boss_Right_Missile(self.x+30, self.y+20)
+            enemy_missile_6 = Boss_Right_Missile(self.x+80, self.y)
+
 
             enemy_missile_list.append(enemy_missile_1)
             enemy_missile_list.append(enemy_missile_2)
             enemy_missile_list.append(enemy_missile_5)
+            enemy_missile_list.append(enemy_missile_4)
+            enemy_missile_list.append(enemy_missile_6)
 
             self.missile_count = 0
-
-            # if boss.x <= 200 :
-            #     boss.x += 20
-            # elif boss.x >= 600 :
-            #     boss.x -= 20
-
-            # if(self.x <= 200) :
-            #     self.x += self.speed * frame_time
-            # elif(self.x >= 600) :
-            #     self.x -= self.speed * frame_time
-
 #--------------------------------------------------------------------------------------------#
     def draw(self):
         self.image.clip_draw( self.frame * 72, 1850, 72, 85 , self.x, self.y, 180, 212 )
@@ -828,21 +829,24 @@ def update():
     for enemy_s in enemy_s_list:
         if collide( enemy_s, player ):
             player.sound5()
-            player.hp -= 100
             enemy_s_list.remove(enemy_s)
-            # if player.hp <= 0:
             player_explosion = Explosion(player.x, player.y)
             explosion.append(player_explosion)
+            player.hp -= 20
+            if player.hp <= 0:
+                player.hp = 0
+
 #--------------------------------------------------------------------------------------------#
     # 가디언 미사일 + 플레이어 충돌체크
     for enemy_missile in enemy_missile_list:
         if collide( enemy_missile, player ):
             player.sound5()
             enemy_missile_list.remove( enemy_missile )
-            player.hp -= 35
-            # if player.hp <= 0:
             player_explosion = Explosion(player.x, player.y)
             explosion.append(player_explosion)
+            player.hp -= 20
+            if player.hp <= 0:
+                player.hp = 0
 
 #############################################################################
 def draw():
